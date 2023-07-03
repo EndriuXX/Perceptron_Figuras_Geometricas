@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Perceptron Web</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+  <style>
+    h2 {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .short-input {
+      width: 100px;
+    }
+
+    #result {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    #prediction {
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .shape-image-container {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .shape-image {
+      width: 200px;
+      height: 200px;
+    }
+
+    .message {
+      margin-top: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>O Perceptron pode adivinhar se é um quadrado, um círculo ou um triângulo!</h2>
+    <br>
+
+    <div class="row">
+      <div class="col-md-6">
+        <div class="form-group">
+          <label for="sides">Quantos lados tem a forma?</label>
+          <input type="number" class="form-control short-input" id="sides" min="0">
+        </div>
+
+        <div class="form-group">
+          <label for="angles">Quantos ângulos tem a forma?</label>
+          <input type="number" class="form-control short-input" id="angles" min="0">
+        </div>
+        
+        <div class="form-group">
+          <label for="equalSides">A forma tem todos os lados iguais?</label>
+          <select class="form-control" id="equalSides">
+            <option value="0">Não</option>
+            <option value="1">Sim</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="rightAngles">A forma tem algum ângulo reto?</label>
+          <select class="form-control" id="rightAngles">
+            <option value="0">Não</option>
+            <option value="1">Sim</option>
+          </select>
+        </div>
+
+        <div class="text-center">
+          <div class="btn-group">
+            <button class="btn btn-primary" onclick="trainAndPredict()">Treinar e Prever</button>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-primary btn-clear" onclick="clearData()">Limpar Dados</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="shape-image-container">
+          <img id="shapeImage" class="shape-image" src="" alt="Figura" style="display: none;">
+        </div>
+        <div id="result" style="display: none;">
+          <p id="prediction" class="message"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function Perceptron() {
+      this.weights = [0, 0, 0, 0];
+      this.bias = 0;
+    }
+
+    Perceptron.prototype.predict = function(sides, angles, equalSides, rightAngles) {
+      var summation = sides * this.weights[0] + angles * this.weights[1] + equalSides * this.weights[2] + rightAngles * this.weights[3] + this.bias;
+      return summation >= 0 ? (summation < 1 ? 0 : 1) : -1;  // -1: Triângulo, 0: Círculo, 1: Quadrado
+    };
+
+    Perceptron.prototype.train = function(trainingData, targets, epochs) {
+      for (var i = 0; i < epochs; i++) {
+        for (var j = 0; j < trainingData.length; j++) {
+          var inputs = trainingData[j];
+          var target = targets[j];
+          var sides = inputs[0];
+          var angles = inputs[1];
+          var equalSides = inputs[2];
+          var rightAngles = inputs[3];
+          var prediction = this.predict(sides, angles, equalSides, rightAngles);
+          var error = target - prediction;
+          this.weights[0] += error * sides;
+          this.weights[1] += error * angles;
+          this.weights[2] += error * equalSides;
+          this.weights[3] += error * rightAngles;
+          this.bias += error;
+        }
+      }
+    };
+
+    var perceptron = new Perceptron();
+
+    function trainAndPredict() {
+      var trainingData = [
+        [4, 4, 1, 1], // Quadrado
+        [0, 0, 0, 0], // Círculo
+        [3, 3, 1, 0]  // Triângulo
+      ];
+      var targets = [1, 0, -1];  // 1: Quadrado, 0: Círculo, -1: Triângulo
+      var epochs = 30;
+
+      perceptron.train(trainingData, targets, epochs);
+
+      var sides = parseInt(document.getElementById("sides").value);
+      var angles = parseInt(document.getElementById("angles").value);
+      var equalSides = parseInt(document.getElementById("equalSides").value);
+      var rightAngles = parseInt(document.getElementById("rightAngles").value);
+      var prediction = perceptron.predict(sides, angles, equalSides, rightAngles);
+      var resultElement = document.getElementById("result");
+      var predictionElement = document.getElementById("prediction");
+      var shapeImageElement = document.getElementById("shapeImage");
+
+      switch(prediction) {
+        case -1:
+          predictionElement.innerText = "É um triângulo!";
+          shapeImageElement.src = "triangulo.jpg";
+          break;
+        case 0:
+          predictionElement.innerText = "É um círculo!";
+          shapeImageElement.src = "circulo.jpg";
+          break;
+        case 1:
+          predictionElement.innerText = "É um quadrado!";
+          shapeImageElement.src = "quadrado.jpg";
+          break;
+      }
+
+      resultElement.style.display = "block";
+      shapeImageElement.style.display = "block";
+    }
+
+    function clearData() {
+      document.getElementById("sides").value = "";
+      document.getElementById("angles").value = "";
+      document.getElementById("equalSides").value = "0";
+      document.getElementById("rightAngles").value = "0";
+      document.getElementById("result").style.display = "none";
+      document.getElementById("shapeImage").style.display = "none";
+    }
+  </script>
+</body>
+</html>
